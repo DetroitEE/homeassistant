@@ -1,0 +1,240 @@
+automation:
+- action:
+  - alias: Set Thermostat Mode to Heat
+    service: rest_command.thermostat_mode_heat
+  alias: Set Thermostat Mode to Heat
+  trigger:
+    platform: state
+    entity_id: input_select.thermostat_mode
+    to: "Heat"
+    
+- action:
+    service: rest_command.thermostat_mode_cool
+  alias: Set Thermostat Mode to Cool
+  trigger:
+    platform: state
+    entity_id: input_select.thermostat_mode
+    to: "Cool"
+
+- action:
+    service: rest_command.thermostat_mode_off
+  alias: Set Thermostat Mode to Off
+  trigger:
+    platform: state
+    entity_id: input_select.thermostat_mode
+    to: "Off"
+    
+- action:
+    service: rest_command.fan_mode_auto
+  alias: Set Fan Mode to Auto
+  trigger:
+    platform: state
+    entity_id: input_select.fan_mode
+    to: "Auto"
+    
+- action:
+    service: rest_command.fan_mode_on
+  alias: Set Fan Mode to On
+  trigger:
+    platform: state
+    entity_id: input_select.fan_mode
+    to: "On"
+    
+- alias: Thermostat Mode Update
+  trigger:
+    platform: state
+    entity_id: sensor.thermostat_mode
+  action:
+  - service: input_select.select_option
+    data_template:
+      entity_id: input_select.thermostat_mode
+      option: >
+        {{ states.sensor.thermostat_mode.state }}
+
+- alias: Fan Mode Update
+  trigger:
+    platform: state
+    entity_id: sensor.fan_mode
+  action:
+  - service: input_select.select_option
+    data_template:
+      entity_id: input_select.fan_mode
+      option: >
+        {{ states.sensor.fan_mode.state }}
+        
+- alias: Heat Setpoint Slider
+  trigger:
+    platform: state
+    entity_id: input_number.heat_setpoint
+  action:
+    service: rest_command.heat_setpoint
+    
+- alias: Heat Setpoint Update
+  trigger:
+    platform: state
+    entity_id: sensor.heat_setpoint
+  action:
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.heat_setpoint
+      value: >
+        {{ states.sensor.heat_setpoint.state }}
+        
+- alias: Cool Setpoint Slider
+  trigger:
+    platform: state
+    entity_id: input_number.cool_setpoint
+  action:
+    service: rest_command.cool_setpoint
+    
+- alias: Cool Setpoint Update
+  trigger:
+    platform: state
+    entity_id: sensor.cool_setpoint
+  action:
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.cool_setpoint
+      value: >
+        {{ states.sensor.cool_setpoint.state }}
+
+- action:
+    service: rest_command.thermostat_mode_heat
+  alias: Always Run Heat When Cold
+  condition:
+    condition: numeric_state
+    entity_id: sensor.dark_sky_temperature
+    below: 55
+  trigger:
+    - platform: state
+      entity_id: sensor.thermostat_mode
+      to: 'Off'
+      for:
+        seconds: 30
+    - platform: state
+      entity_id: sensor.thermostat_mode
+      to: 'Off'
+      for:
+        seconds: 60
+    - platform: state
+      entity_id: sensor.thermostat_mode
+      to: 'Off'
+      for:
+        seconds: 90
+
+input_number:
+  heat_setpoint:
+    name: Heat Setpoint
+    min: 58
+    max: 72
+    mode: box
+    icon: mdi:thermometer
+    unit_of_measurement: °F
+  cool_setpoint:
+    name: Cool Setpoint
+    min: 72
+    max: 80
+    mode: box
+    icon: mdi:thermometer
+    unit_of_measurement: °F
+    
+input_select:
+  thermostat_mode:
+    name: Thermostat Mode
+    options:
+      - Auto
+      - Heat
+      - Cool
+      - "Off"
+    icon: mdi:gauge
+  fan_mode:
+    name: Fan Mode
+    options:
+      - Auto
+      - "On"
+    icon: mdi:fan
+    
+rest_command:
+  heat_setpoint:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/set/CLISPH/{{ states.input_number.heat_setpoint.state | int * 2 }}
+    username: !secret isy_username
+    password: !secret isy_password
+  cool_setpoint:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/set/CLISPC/{{ states.input_number.cool_setpoint.state | int * 2 }}
+    username: !secret isy_username
+    password: !secret isy_password
+  thermostat_up:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/BRT
+    username: !secret isy_username
+    password: !secret isy_password
+  thermostat_down:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/DIM
+    username: !secret isy_username
+    password: !secret isy_password
+  thermostat_mode_off:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/CLIMD/0
+    username: !secret isy_username
+    password: !secret isy_password
+  thermostat_mode_heat:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/CLIMD/1
+    username: !secret isy_username
+    password: !secret isy_password
+  thermostat_mode_cool:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/CLIMD/2
+    username: !secret isy_username
+    password: !secret isy_password
+  thermostat_mode_auto:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/CLIMD/3
+    username: !secret isy_username
+    password: !secret isy_password
+  fan_mode_on:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/CLIFS/7
+    username: !secret isy_username
+    password: !secret isy_password
+  fan_mode_auto:
+    url: http://192.168.1.105/rest/nodes/28%209C%20CC%201/cmd/CLIFS/8
+    username: !secret isy_username
+    password: !secret isy_password
+  heat_setpoint_comfort:
+    url: http://192.168.1.105/rest/programs/0014/runThen
+    username: !secret isy_username
+    password: !secret isy_password
+  heat_setpoint_away:
+    url: http://192.168.1.105/rest/programs/0049/runThen
+    username: !secret isy_username
+    password: !secret isy_password
+    
+sensor:
+  - platform: command_line
+    name: House Temp
+    command: '/usr/bin/curl --user admin:esph1000 "http://192.168.1.105/rest/nodes/28%209C%20CC%201/ST" 2>&1 | grep -oPm1 "(?<=formatted=\")[0-9.]{4}"'
+    unit_of_measurement: °F
+    scan_interval: 5
+    
+  - platform: command_line
+    name: House Humidity
+    command: '/usr/bin/curl --user admin:esph1000 "http://192.168.1.105/rest/nodes/28%209C%20CC%201/CLIHUM" 2>&1 | grep -oPm1 "(?<=formatted=\")[0-9]+"'
+    unit_of_measurement: '%'
+    scan_interval: 5
+
+  - platform: command_line
+    name: Heat Setpoint
+    command: '/usr/bin/curl --user admin:esph1000 "http://192.168.1.105/rest/nodes/28%209C%20CC%201/CLISPH" 2>&1 | grep -oPm1 "(?<=formatted=\")[0-9]+"'
+    unit_of_measurement: °F
+    scan_interval: 5
+    
+  - platform: command_line
+    name: Cool Setpoint
+    command: '/usr/bin/curl --user admin:esph1000 "http://192.168.1.105/rest/nodes/28%209C%20CC%201/CLISPC" 2>&1 | grep -oPm1 "(?<=formatted=\")[0-9]+"'
+    unit_of_measurement: °F
+    scan_interval: 5
+
+  - platform: command_line
+    name: Thermostat Mode
+    command: '/usr/bin/curl --user admin:esph1000 "http://192.168.1.105/rest/nodes/28%209C%20CC%201/CLIMD" 2>&1 | grep -oPm1 "(?<=formatted=\")[A-Za-z]+"'
+    scan_interval: 5
+    
+  - platform: command_line
+    name: Fan Mode
+    command: '/usr/bin/curl --user admin:esph1000 "http://192.168.1.105/rest/nodes/28%209C%20CC%201/CLIFS" 2>&1 | grep -oPm1 "(?<=formatted=\")[A-Za-z]+"'
+    scan_interval: 5
