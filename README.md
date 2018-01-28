@@ -1,1 +1,1 @@
-# homeassistant
+Home Assitant configuration files
