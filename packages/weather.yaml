@@ -10,14 +10,14 @@ sensor:
       - 6
       - 7
     monitored_conditions:
-    - summary
-    - temperature
-    - temperature_low
-    - temperature_high
-    - humidity
-    - precip_probability
-    - daily_summary
-    - icon
+      - summary
+      - temperature
+      - temperature_low
+      - temperature_high
+      - humidity
+      - precip_probability
+      - daily_summary
+      - icon
   - platform: season
   - platform: template
     sensors:
